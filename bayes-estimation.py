@@ -9,7 +9,8 @@ from numpy import zeros
 from numpy.random import dirichlet
 from numpy.random import sample
 
-
+# use numpy.random.multinomial instead
+# nonzero(multinomial(1, distribution))[0][0]
 def discrete_random_sample(distribution):
 	"""
 	Return a random integer according to a discrete distribution.
@@ -98,16 +99,35 @@ def iterate_gibbs_sampling(hyp_pi, hyp_thetas, pi, thetas, corpus, labels):
 	@return: new category distribution, word distributions, and labels
 	@rtype: tuple
 	"""
-	v = corpus.shape[1]	# vocabulary size
-	c = pi.size			# number of categories
+	documents = corpus.shape[0]		# corpus size
+	vocaublary = corpus.shape[1]	# vocabulary size
+	categories = pi.size			# number of categories
 	# Get class counts and word counts for the classes.
-	category_counts = empty(c)
-	word_counts = empty((c, v), int)
-	for label in xrange(c):
-		category_counts[label] = count_nonzero(labels == label)
-		word_counts[label] = corpus[nonzero(labels == label)].transpose().sum(1)
-	# Get the posterior probabilites of the documents.
-	document_posteriors = (thetas**word_counts).prod(1)
+	category_counts = empty(categories)
+	word_counts = empty((categories, vocaublary), int)
+	for category in xrange(categories):
+		category_counts[category] = count_nonzero(labels == category)
+		word_counts[category] = corpus[nonzero(labels == category)].transpose().sum(1)
+	
+	# Estimate the new document labels.
+	for document in xrange(documents):
+		category = labels[document]
+		word_counts[category] -= corpus[document]
+		category_counts[category] -= 1
+		posterior_pi = empty(categories)
+		# Calculate label posterior for a single document.
+		for category in xrange(categories):			
+			label_factor = \
+				(word_counts[category].sum() + hyp_pi[category] - 1)/ \
+				(word_counts.sum() + hyp_pi.sum() - 1)
+			word_factor = (thetas[category]**word_counts[category]).prod(1)
+			posterior_pi[category] = label_factor * word_factor
+		new_category = discrete_random_sample(posterior_pi)
+		labels[document] = new_category
+		word_counts[new_category] += corpus[document]
+		category_counts[new_category] += 1
+	
+	# Estimate the new word count distributions.
 	return pi, thetas, labels
 
 
