@@ -1,13 +1,8 @@
 #!/usr/bin/env 	python
 
-from numpy import array
-from numpy import count_nonzero
-from numpy import empty
-from numpy import ones
-from numpy import nonzero
-from numpy import zeros
-from numpy.random import dirichlet
-from numpy.random import multinomial
+from numpy import array, count_nonzero, empty, ones, nonzero, zeros
+from numpy.random import dirichlet, multinomial
+
 
 def multinomial_sample(distribution):
 	"""
