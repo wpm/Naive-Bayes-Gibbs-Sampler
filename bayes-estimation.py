@@ -7,26 +7,18 @@ from numpy import ones
 from numpy import nonzero
 from numpy import zeros
 from numpy.random import dirichlet
-from numpy.random import sample
+from numpy.random import multinomial
 
-# use numpy.random.multinomial instead
-# nonzero(multinomial(1, distribution))[0][0]
-def discrete_random_sample(distribution):
+def multinomial_sample(distribution):
 	"""
-	Return a random integer according to a discrete distribution.
+	Sample a random integer according to a multinomial distribution.
 	
 	@param distribution: probabilitiy distribution
 	@type distribution: array
 	@return: integer in the range 0 to the length of distribution
 	@rtype: integer
 	"""
-	uniform = sample()
-	for i, p in enumerate(distribution):
-		if uniform < p:
-			return i
-		uniform -= p
-	return i
-
+	return nonzero(multinomial(1, distribution))[0][0]
 
 def generate_corpus(c, v, r, n):
 	"""
@@ -49,12 +41,12 @@ def generate_corpus(c, v, r, n):
 	corpus = empty((n,v), int)
 	labels = empty(n, int)
 	for i in xrange(n):
-		c = discrete_random_sample(pi)
+		c = multinomial_sample(pi)
 		labels[i] = c
 		theta = thetas[c]
 		w = zeros(v, int)
 		for _ in xrange(r):
-			k = discrete_random_sample(theta)
+			k = multinomial_sample(theta)
 			w[k] += 1
 		corpus[i] = w
 	return pi, thetas, corpus, labels
@@ -78,7 +70,7 @@ def initialize_gibbs_sampling(hyp_pi, hyp_thetas, corpus):
 	thetas = empty(hyp_thetas.shape)
 	for i in xrange(c):
 		thetas[i] = dirichlet(hyp_thetas[i], 1)[0]
-	labels = array([discrete_random_sample(pi) for i in xrange(corpus.shape[0])])
+	labels = array([multinomial_sample(pi) for i in xrange(corpus.shape[0])])
 	return pi, thetas, labels
 
 
@@ -122,7 +114,7 @@ def iterate_gibbs_sampling(hyp_pi, hyp_thetas, pi, thetas, corpus, labels):
 				(word_counts.sum() + hyp_pi.sum() - 1)
 			word_factor = (thetas[category]**word_counts[category]).prod(1)
 			posterior_pi[category] = label_factor * word_factor
-		new_category = discrete_random_sample(posterior_pi)
+		new_category = multinomial_sample(posterior_pi)
 		labels[document] = new_category
 		word_counts[new_category] += corpus[document]
 		category_counts[new_category] += 1
