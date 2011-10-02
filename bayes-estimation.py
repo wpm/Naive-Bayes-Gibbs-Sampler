@@ -102,7 +102,7 @@ def iterate_gibbs_sampling(hyp_pi, hyp_thetas, pi, thetas, corpus, labels):
 	vocaublary = corpus.shape[1]	# vocabulary size
 	categories = pi.size			# number of categories
 	# Get class counts and word counts for the classes.
-	category_counts = empty(categories)
+	category_counts = empty(categories, int)
 	word_counts = empty((categories, vocaublary), int)
 	for category in xrange(categories):
 		category_counts[category] = count_nonzero(labels == category)
@@ -115,12 +115,15 @@ def iterate_gibbs_sampling(hyp_pi, hyp_thetas, pi, thetas, corpus, labels):
 		category_counts[category] -= 1
 		posterior_pi = empty(categories)
 		# Calculate label posterior for a single document.
-		for category in xrange(categories):			
+		for category in xrange(categories):
 			label_factor = \
-				(word_counts[category].sum() + hyp_pi[category] - 1)/ \
-				(word_counts.sum() + hyp_pi.sum() - 1)
-			word_factor = (thetas[category]**word_counts[category]).prod(1)
+				(word_counts[category].sum() + hyp_pi[category] - 1.0)/ \
+				(word_counts.sum() + hyp_pi.sum() - 1.0)	# Writing 1.0 forces a cast
+															# to float.
+			word_factor = (thetas[category]**word_counts[category]).prod()
 			posterior_pi[category] = label_factor * word_factor
+		# Select a new label for the document.
+		posterior_pi /= posterior_pi.sum()
 		new_category = multinomial_sample(posterior_pi)
 		labels[document] = new_category
 		word_counts[new_category] += corpus[document]
@@ -135,7 +138,7 @@ if __name__ == "__main__":
 	c = 2	# number of categories
 	v = 4	# vocabulary size
 	r = 100	# document length
-	n = 3	# dataset size
+	n = 5	# dataset size
 	
 	true_pi, true_theta, corpus, true_labels = generate_corpus(c, v, r, n)
 	print "true pi %s" % true_pi
@@ -143,16 +146,22 @@ if __name__ == "__main__":
 	print "true labels %s" % true_labels
 	print "corpus\n%s" % corpus
 	
-	print "\n\n"
 	hyp_pi = ones(c, int)			# uninformed label prior
 	hyp_thetas = ones((c,v), int)	# uninformed word prior
 	pi, thetas, labels = initialize_gibbs_sampling(hyp_pi, hyp_thetas, corpus)
+	print "\nInitialize"
 	print "pi %s" % pi
 	print "thetas\n%s" % thetas
 	print "labels %s" % labels
-	
-	pi, thetas, labels = iterate_gibbs_sampling(
-		hyp_pi, hyp_thetas,
-		pi, thetas,
-		corpus, labels)
+
+	for i in xrange(3):
+		pi, thetas, labels = iterate_gibbs_sampling(
+			hyp_pi, hyp_thetas,
+			pi, thetas,
+			corpus, labels)
+		print "\nIteration %d" % (i+1)
+		print "pi %s" % pi
+		print "thetas\n%s" % thetas
+		print "labels %s" % labels
+
 	
