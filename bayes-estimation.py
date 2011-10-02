@@ -15,7 +15,7 @@ def multinomial_sample(distribution):
 	"""
 	return nonzero(multinomial(1, distribution))[0][0]
 
-def generate_corpus(c, v, r, n):
+def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 	"""
 	Create model parameters and sample data for a corpus of labeled documents.
 	
@@ -27,12 +27,24 @@ def generate_corpus(c, v, r, n):
 	@type r: integer
 	@param: n dataset size
 	@type n: integer
+	@param hyp_pi: optional category hyperparamter, default uninformative
+	@type hyp_pi: list or None
+	@param hyp_thetas: optional word count hyperparamter, default uninformative
+	@type hyp_thetas: list or None
 	@return: category distribution, word distributions per category, documents,
 			document labels
 	@rtype: tuple
 	"""
-	pi = dirichlet([1]*c, 1)[0]
-	thetas = dirichlet([1]*v, c)
+	if hyp_pi == None:
+		hyp_pi = [1]*c
+	if len(hyp_pi) != c:
+		raise Exception()
+	if hyp_thetas == None:
+		hyp_thetas = [1]*v
+	if len(hyp_thetas) != v:
+		raise Exception()
+	pi = dirichlet(hyp_pi, 1)[0]
+	thetas = dirichlet(hyp_thetas, c)
 	corpus = empty((n,v), int)
 	labels = empty(n, int)
 	for i in xrange(n):
