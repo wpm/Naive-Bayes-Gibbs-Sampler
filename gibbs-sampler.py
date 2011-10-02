@@ -37,8 +37,7 @@ def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 	@type hyp_pi: list or None
 	@param hyp_thetas: optional word count hyperparamter, default uninformative
 	@type hyp_thetas: list or None
-	@return: category distribution, word distributions per category, documents,
-			document labels
+	@return: word distributions per category, documents, document labels
 	@rtype: tuple
 	"""
 	# Set up the hyperparameters.
@@ -65,7 +64,7 @@ def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 			k = multinomial_sample(theta)
 			w[k] += 1
 		corpus[i] = w
-	return pi, thetas, corpus, labels
+	return thetas, corpus, labels
 
 
 class GibbsSampler(object):
@@ -176,8 +175,7 @@ if __name__ == "__main__":
 	r = 100	# document length
 	n = 10	# dataset size
 	
-	true_pi, true_theta, corpus, true_labels = generate_corpus(c, v, r, n)
-	print "true pi %s" % true_pi
+	true_theta, corpus, true_labels = generate_corpus(c, v, r, n)
 	print "true thetas\n%s" % true_theta
 	print "true labels %s" % true_labels
 	print "corpus\n%s" % corpus
