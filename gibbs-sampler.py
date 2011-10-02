@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""
+Implementation of the Gibbs sampler for Naive Bayes document classification described
+in U{Resnik and Hardisty 2010, "Gibbs Sampling for the Uninitiated
+<http://drum.lib.umd.edu/handle/1903/10058>}.
+"""
+
 from numpy import array, count_nonzero, empty, ones, nonzero, zeros
 from numpy.random import dirichlet, multinomial
 
@@ -13,7 +19,7 @@ def multinomial_sample(distribution):
 	@return: integer in the range 0 to the length of distribution
 	@rtype: integer
 	"""
-	return nonzero(multinomial(1, distribution))[0][0]
+	return multinomial(1, distribution).argmax()
 
 def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 	"""
@@ -35,6 +41,7 @@ def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 			document labels
 	@rtype: tuple
 	"""
+	# Set up the hyperparameters.
 	if hyp_pi == None:
 		hyp_pi = [1]*c
 	if len(hyp_pi) != c:
@@ -43,8 +50,10 @@ def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 		hyp_thetas = [1]*v
 	if len(hyp_thetas) != v:
 		raise Exception()
+	# Generate the true model parameters.
 	pi = dirichlet(hyp_pi, 1)[0]
 	thetas = dirichlet(hyp_thetas, c)
+	# Generate the corpus and the true labels.
 	corpus = empty((n,v), int)
 	labels = empty(n, int)
 	for i in xrange(n):
