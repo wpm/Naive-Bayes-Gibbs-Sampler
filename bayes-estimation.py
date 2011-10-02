@@ -139,10 +139,10 @@ def iterate_gibbs_sampling(hyp_pi, hyp_thetas, thetas, labels, corpus):
 
 if __name__ == "__main__":
 	# Generate data set
-	c = 2	# number of categories
+	c = 3	# number of categories
 	v = 4	# vocabulary size
 	r = 100	# document length
-	n = 5	# dataset size
+	n = 10	# dataset size
 	
 	true_pi, true_theta, corpus, true_labels = generate_corpus(c, v, r, n)
 	print "true pi %s" % true_pi
