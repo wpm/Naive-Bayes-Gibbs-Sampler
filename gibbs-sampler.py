@@ -79,17 +79,29 @@ class GibbsSampler(object):
 		return "hyper pi\n%s\nhyper thetas\n%s\nthetas\n%slabels %s" % \
 			(self.hyp_pi, self.hyp_thetas, self.thetas, self.labels)
 	
-	def run(self, iterations = 10):
+	def run(self, iterations = 10, burn_in = 0, lag = 0):
 		"""
 		Run the Gibbs sampler
 		
 		@param iterations: number of iterations to run
-		@type iterations: integer		
+		@type iterations: integer
+		@param burn_in: number of burn in iterations to ignore before returning results
+		@type burn_in: integer
+		@param lag: number of iterations to skip between returning values
+		@type lag: integer
 		"""
 		self._initialize_gibbs_sampler()
+		lag_counter = lag
 		for iteration in xrange(iterations):
 			self._iterate_gibbs_sampler()
-			yield iteration, self.thetas, self.labels
+			if burn_in > 0:
+				burn_in -= 1
+			else:
+				if lag_counter > 0:
+					lag_counter -= 1
+				else:
+					lag_counter = lag
+					yield iteration, self.thetas, self.labels
 	
 	def _initialize_gibbs_sampler(self):
 		"""
