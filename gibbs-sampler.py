@@ -31,7 +31,7 @@ def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 	@type v: integer
 	@param r: document length
 	@type r: integer
-	@param: n dataset size
+	@param: n corpus size
 	@type n: integer
 	@param hyp_pi: optional category hyperparamter, default uninformative
 	@type hyp_pi: list or None
@@ -110,6 +110,27 @@ class GibbsSampler(object):
 				else:
 					lag_counter = lag
 					yield iteration, self.thetas, self.labels
+
+	def _categories(self):
+		"""
+		@return: number of categories in the model
+		@rtype: integer
+		"""
+		return self.hyp_pi.size
+	
+	def _documents(self):
+		"""
+		@return: number of documents in the corpus
+		@rtype: integer
+		"""
+		return self.corpus.shape[0]
+		
+	def _vocabulary(self):
+		"""
+		@return: size of the vocabulary
+		@rtype: integer
+		"""
+		return self.corpus.shape[1]
 	
 	def _initialize_gibbs_sampler(self):
 		"""
@@ -118,12 +139,13 @@ class GibbsSampler(object):
 		This sets the initial values of the C{labels} and C{thetas} parameters.		
 		"""
 		pi = dirichlet(self.hyp_pi, 1)[0]
-		c, v = hyp_thetas.shape
+		categories = self._categories()
+		documents = self._documents()
 		self.thetas = empty(self.hyp_thetas.shape)
-		for i in xrange(c):
+		for i in xrange(categories):
 			self.thetas[i] = dirichlet(self.hyp_thetas[i], 1)[0]
 		self.labels = array([multinomial_sample(pi) \
-			for i in xrange(self.corpus.shape[0])])
+			for i in xrange(documents)])
 	
 	def _iterate_gibbs_sampler(self):
 		"""
@@ -131,15 +153,16 @@ class GibbsSampler(object):
 		
 		This updates the values of the C{labels} and C{thetas} parameters.		
 		"""
-		documents = self.corpus.shape[0]	# corpus size
-		vocaublary = self.corpus.shape[1]	# vocabulary size
-		categories = self.hyp_pi.size		# number of categories
+		documents = self._documents()	# corpus size
+		vocabulary = self._vocabulary()	# vocabulary size
+		categories = self._categories()	# number of categories
 		# Get class counts and word counts for the classes.
 		category_counts = empty(categories, int)
-		word_counts = empty((categories, vocaublary), int)
+		word_counts = empty((categories, vocabulary), int)
 		for category in xrange(categories):
 			category_counts[category] = count_nonzero(self.labels == category)
-			word_counts[category] = self.corpus[nonzero(self.labels == category)].transpose().sum(1)
+			word_counts[category] = \
+				self.corpus[nonzero(self.labels == category)].transpose().sum(1)
 
 		# Estimate the new document labels.
 		for document in xrange(documents):
@@ -151,8 +174,8 @@ class GibbsSampler(object):
 			for category in xrange(categories):
 				label_factor = \
 					(word_counts[category].sum() + self.hyp_pi[category] - 1.0)/ \
-					(word_counts.sum() + self.hyp_pi.sum() - 1.0)	# Writing 1.0 forces a cast
-																	# to float.
+					(word_counts.sum() + self.hyp_pi.sum() - 1.0)	# Writing 1.0 forces
+																	#  a cast to float.
 				word_factor = (self.thetas[category]**word_counts[category]).prod()
 				posterior_pi[category] = label_factor * word_factor
 			# Select a new label for the document.
