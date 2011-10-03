@@ -6,7 +6,7 @@ in U{Resnik and Hardisty 2010, "Gibbs Sampling for the Uninitiated
 <http://drum.lib.umd.edu/handle/1903/10058>}.
 """
 
-from numpy import array, count_nonzero, empty, ones, nonzero, zeros
+from numpy import array, count_nonzero, empty, exp, inf, log, logaddexp, ones, nonzero, zeros
 from numpy.random import dirichlet, multinomial
 
 
@@ -15,11 +15,11 @@ def multinomial_sample(distribution):
 	Sample a random integer according to a multinomial distribution.
 	
 	@param distribution: probabilitiy distribution
-	@type distribution: array
+	@type distribution: array of log probabilities
 	@return: integer in the range 0 to the length of distribution
 	@rtype: integer
 	"""
-	return multinomial(1, distribution).argmax()
+	return multinomial(1, exp(distribution)).argmax()
 
 def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 	"""
@@ -50,8 +50,8 @@ def generate_corpus(c, v, r, n, hyp_pi = None, hyp_thetas = None):
 	if len(hyp_thetas) != v:
 		raise Exception()
 	# Generate the true model parameters.
-	pi = dirichlet(hyp_pi, 1)[0]
-	thetas = dirichlet(hyp_thetas, c)
+	pi = log(dirichlet(hyp_pi, 1)[0])
+	thetas = log(dirichlet(hyp_thetas, c))
 	# Generate the corpus and the true labels.
 	corpus = empty((n,v), int)
 	labels = empty(n, int)
@@ -138,12 +138,12 @@ class GibbsSampler(object):
 		
 		This sets the initial values of the C{labels} and C{thetas} parameters.		
 		"""
-		pi = dirichlet(self.hyp_pi, 1)[0]
+		pi = log(dirichlet(self.hyp_pi, 1)[0])
 		categories = self._categories()
 		documents = self._documents()
 		self.thetas = empty(self.hyp_thetas.shape)
 		for i in xrange(categories):
-			self.thetas[i] = dirichlet(self.hyp_thetas[i], 1)[0]
+			self.thetas[i] = log(dirichlet(self.hyp_thetas[i], 1)[0])
 		self.labels = array([multinomial_sample(pi) \
 			for i in xrange(documents)])
 	
@@ -174,12 +174,14 @@ class GibbsSampler(object):
 			for category in xrange(categories):
 				label_factor = \
 					(word_counts[category].sum() + self.hyp_pi[category] - 1.0)/ \
-					(word_counts.sum() + self.hyp_pi.sum() - 1.0)	# Writing 1.0 forces
-																	#  a cast to float.
-				word_factor = (self.thetas[category]**word_counts[category]).prod()
-				posterior_pi[category] = label_factor * word_factor
+					(word_counts.sum() + self.hyp_pi.sum() - 1.0)
+				if label_factor != 0:
+					word_factor = (self.thetas[category]*word_counts[category]).sum()
+					posterior_pi[category] = log(label_factor) + word_factor
+				else:
+					posterior_pi[category] = -inf
 			# Select a new label for the document.
-			posterior_pi /= posterior_pi.sum()
+			posterior_pi -= self._sum_log_array(posterior_pi)
 			new_category = multinomial_sample(posterior_pi)
 			self.labels[document] = new_category
 			word_counts[new_category] += self.corpus[document]
@@ -188,13 +190,26 @@ class GibbsSampler(object):
 		# Estimate the new word count distributions.
 		t = word_counts + self.hyp_thetas
 		for theta_index in xrange(categories):
-			self.thetas[theta_index] = dirichlet(t[theta_index], 1)[0]
+			self.thetas[theta_index] = log(dirichlet(t[theta_index], 1)[0])
 
+	def _sum_log_array(self, a):
+		"""
+		Sum the log probabilities in an array.
+		
+		@param a: array logs
+		@type a: array of float
+		@return: log(exp(a[0]) + exp(a[1]) + ... + exp(a[n]))
+		@rtype: float
+		"""
+		m = array([-inf])
+		for element in a[nonzero(a != -inf)]:
+			logaddexp(m,element,m)
+		return m[0]				
 
 if __name__ == "__main__":
 	# Generate data set
-	c = 3	# number of categories
-	v = 4	# vocabulary size
+	c = 10	# number of categories
+	v = 5	# vocabulary size
 	r = 100	# document length
 	n = 10	# dataset size
 	
@@ -209,7 +224,7 @@ if __name__ == "__main__":
 	sampler = GibbsSampler(hyp_pi, hyp_thetas, corpus)
 	
 	# Run the Gibbs sampler.
-	for iteration, thetas, labels in sampler.run(3):
+	for iteration, thetas, labels in sampler.run(5):
 		print "\nIteration %d" % (iteration+1)
 		print "thetas\n%s" % thetas
 		print "labels %s" % labels
