@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Implementation of the Gibbs sampler for Naive Bayes document classification described
 in U{Resnik and Hardisty 2010, "Gibbs Sampling for the Uninitiated
