@@ -19,7 +19,7 @@ def multinomial_sample(distribution):
 	"""
 	return multinomial(1, exp(distribution)).argmax()
 
-def generate_corpus(categories, vocabulary, words, documents, hyp_pi = None, hyp_thetas = None):
+def generate_corpus(categories, vocabulary, documents, hyp_pi = None, hyp_thetas = None):
 	"""
 	Create model parameters and sample data for a corpus of labeled documents.
 	
@@ -27,8 +27,6 @@ def generate_corpus(categories, vocabulary, words, documents, hyp_pi = None, hyp
 	@type categories: integer
 	@param vocabulary: vocabulary size
 	@type vocabulary: integer
-	@param words: words per document
-	@type words: integer
 	@param documents: number of documents in the corpus
 	@type documents: integer
 	@param hyp_pi: optional category hyperparamter, default uninformative
@@ -58,7 +56,7 @@ def generate_corpus(categories, vocabulary, words, documents, hyp_pi = None, hyp
 		labels[document_index] = category
 		theta = thetas[category]
 		document = zeros(vocabulary, int)
-		for _ in xrange(words):
+		for _ in xrange(vocabulary*100):
 			word = multinomial_sample(theta)
 			document[word] += 1
 		corpus[document_index] = document
@@ -235,11 +233,10 @@ if __name__ == "__main__":
 	# Generate data set
 	categories = 10	# number of categories
 	vocabulary = 5	# vocabulary size
-	words = 100		# document length
 	documents = 10	# dataset size
 	
 	true_theta, corpus, true_labels = \
-		generate_corpus(categories, vocabulary, words, documents)
+		generate_corpus(categories, vocabulary, documents)
 	print "true thetas\n%s" % true_theta
 	print "true labels %s" % true_labels
 	print "corpus\n%s" % corpus
