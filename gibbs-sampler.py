@@ -4,14 +4,15 @@ in U{Resnik and Hardisty 2010, "Gibbs Sampling for the Uninitiated
 <http://drum.lib.umd.edu/handle/1903/10058>}.
 """
 
-from numpy import array, count_nonzero, empty, exp, inf, log, logaddexp, ones, nonzero, zeros
+from numpy import array, empty, ones, nonzero, zeros
+from numpy import count_nonzero, exp, inf, log, logaddexp
 from numpy.random import dirichlet, multinomial
 
 
 def multinomial_sample(distribution):
 	"""
 	Sample a random integer according to a multinomial distribution.
-	
+
 	@param distribution: probabilitiy distribution
 	@type distribution: array of log probabilities
 	@return: integer in the range 0 to the length of distribution
@@ -19,10 +20,11 @@ def multinomial_sample(distribution):
 	"""
 	return multinomial(1, exp(distribution)).argmax()
 
-def generate_corpus(categories, vocabulary, documents, hyp_pi = None, hyp_thetas = None):
+def generate_corpus(categories, vocabulary, documents,
+					hyp_pi = None, hyp_thetas = None):
 	"""
 	Create model parameters and sample data for a corpus of labeled documents.
-	
+
 	@param categories: number of categories
 	@type categories: integer
 	@param vocabulary: vocabulary size
@@ -72,20 +74,20 @@ class GibbsSampler(object):
 		"""
 		self.hyp_pi = hyp_pi
 		self.hyp_thetas = hyp_thetas
-		self.corpus = corpus		
+		self.corpus = corpus
 
 	def __str__(self):
 		return "hyper pi\n%s\nhyper thetas\n%s\nthetas\n%slabels %s" % \
 			(self.hyp_pi, self.hyp_thetas, self.thetas, self.labels)
-	
+
 
 	def estimate_labels(self, iterations = 10, burn_in = 0, lag = 0):
 		"""
 		Estimate the document labels.
-		
+
 		Run the Gibbs sampler and use the expected value of the labels as the label
 		estimates.
-		
+
 		@param iterations: number of iterations to run
 		@type iterations: integer
 		@param burn_in: number of burn in iterations to ignore before returning results
@@ -103,7 +105,7 @@ class GibbsSampler(object):
 	def run(self, iterations = 10, burn_in = 0, lag = 0):
 		"""
 		Run the Gibbs sampler
-		
+
 		@param iterations: number of iterations to run
 		@type iterations: integer
 		@param burn_in: number of burn in iterations to ignore before returning results
@@ -132,26 +134,26 @@ class GibbsSampler(object):
 		@rtype: integer
 		"""
 		return self.hyp_pi.size
-	
+
 	def _documents(self):
 		"""
 		@return: number of documents in the corpus
 		@rtype: integer
 		"""
 		return self.corpus.shape[0]
-		
+
 	def _vocabulary(self):
 		"""
 		@return: size of the vocabulary
 		@rtype: integer
 		"""
 		return self.corpus.shape[1]
-	
+
 	def _initialize_gibbs_sampler(self):
 		"""
 		Initialize the Gibbs sampler
-		
-		This sets the initial values of the C{labels} and C{thetas} parameters.		
+
+		This sets the initial values of the C{labels} and C{thetas} parameters.
 		"""
 		pi = log(dirichlet(self.hyp_pi, 1)[0])
 		categories = self._categories()
@@ -161,12 +163,12 @@ class GibbsSampler(object):
 			self.thetas[category_index] = \
 				log(dirichlet(self.hyp_thetas[category_index], 1)[0])
 		self.labels = array([multinomial_sample(pi) for _ in xrange(documents)])
-	
+
 	def _iterate_gibbs_sampler(self):
 		"""
 		Perform a Gibbs sampling iteration.
-		
-		This updates the values of the C{labels} and C{thetas} parameters.		
+
+		This updates the values of the C{labels} and C{thetas} parameters.
 		"""
 		documents = self._documents()	# corpus size
 		vocabulary = self._vocabulary()	# vocabulary size
@@ -213,7 +215,7 @@ class GibbsSampler(object):
 	def _sum_log_array(self, a):
 		"""
 		Sum the log probabilities in an array.
-		
+
 		@param a: array logs
 		@type a: array of float
 		@return: log(exp(a[0]) + exp(a[1]) + ... + exp(a[n]))
@@ -222,20 +224,20 @@ class GibbsSampler(object):
 		m = array([-inf])
 		for element in a[nonzero(a != -inf)]:
 			logaddexp(m,element,m)
-		return m[0]				
+		return m[0]
 
 if __name__ == "__main__":
 	# Generate data set
 	categories = 10	# number of categories
 	vocabulary = 5	# vocabulary size
 	documents = 10	# dataset size
-	
+
 	true_theta, corpus, true_labels = \
 		generate_corpus(categories, vocabulary, documents)
 	print "true thetas\n%s" % true_theta
 	print "true labels %s" % true_labels
 	print "corpus\n%s" % corpus
-	
+
 	# Create the Gibbs sampler.
 	hyp_pi = ones(categories, int)						# uninformed label prior
 	hyp_thetas = ones((categories, vocabulary), int)	# uninformed word prior
