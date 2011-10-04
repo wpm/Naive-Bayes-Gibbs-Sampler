@@ -85,6 +85,28 @@ class GibbsSampler(object):
 		return "hyper pi\n%s\nhyper thetas\n%s\nthetas\n%slabels %s" % \
 			(self.hyp_pi, self.hyp_thetas, self.thetas, self.labels)
 	
+
+	def estimate_labels(self, iterations = 10, burn_in = 0, lag = 0):
+		"""
+		Estimate the document labels.
+		
+		Run the Gibbs sampler and use the expected value of the labels as the label
+		estimates.
+		
+		@param iterations: number of iterations to run
+		@type iterations: integer
+		@param burn_in: number of burn in iterations to ignore before returning results
+		@type burn_in: integer
+		@param lag: number of iterations to skip between returning values
+		@type lag: integer
+		@return: document label estimates
+		@rtype: array
+		"""
+		estimated_labels = zeros(self._categories(), int)
+		for iteration, thetas, labels in sampler.run(iterations, burn_in, lag):
+			estimated_labels += labels
+		return estimated_labels/iterations
+
 	def run(self, iterations = 10, burn_in = 0, lag = 0):
 		"""
 		Run the Gibbs sampler
@@ -98,7 +120,8 @@ class GibbsSampler(object):
 		"""
 		self._initialize_gibbs_sampler()
 		lag_counter = lag
-		for iteration in xrange(iterations):
+		iteration = 1
+		while iteration <= iterations:
 			self._iterate_gibbs_sampler()
 			if burn_in > 0:
 				burn_in -= 1
@@ -108,6 +131,7 @@ class GibbsSampler(object):
 				else:
 					lag_counter = lag
 					yield iteration, self.thetas, self.labels
+					iteration += 1
 
 	def _categories(self):
 		"""
@@ -211,7 +235,7 @@ if __name__ == "__main__":
 	# Generate data set
 	categories = 10	# number of categories
 	vocabulary = 5	# vocabulary size
-	words = 100	# document length
+	words = 100		# document length
 	documents = 10	# dataset size
 	
 	true_theta, corpus, true_labels = \
@@ -224,9 +248,7 @@ if __name__ == "__main__":
 	hyp_pi = ones(categories, int)						# uninformed label prior
 	hyp_thetas = ones((categories, vocabulary), int)	# uninformed word prior
 	sampler = GibbsSampler(hyp_pi, hyp_thetas, corpus)
-	
-	# Run the Gibbs sampler.
-	for iteration, thetas, labels in sampler.run(5):
-		print "\nIteration %d" % (iteration+1)
-		print "thetas\n%s" % thetas
-		print "labels %s" % labels
+
+	# Use the sampler to estimate the document labels.
+	estimates = sampler.estimate_labels(20, 5, 2)
+	print "\nEstimated labels\n%s" % estimates
