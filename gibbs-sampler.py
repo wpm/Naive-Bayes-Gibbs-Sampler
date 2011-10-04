@@ -47,20 +47,15 @@ def generate_corpus(categories, vocabulary, documents, hyp_pi = None, hyp_thetas
 		raise Exception()
 	# Generate the true model parameters.
 	pi = log(dirichlet(hyp_pi, 1)[0])
-	thetas = log(dirichlet(hyp_thetas, categories))
+	thetas = dirichlet(hyp_thetas, categories)
 	# Generate the corpus and the true labels.
 	corpus = empty((documents, vocabulary), int)
 	labels = empty(documents, int)
 	for document_index in xrange(documents):
 		category = multinomial_sample(pi)
 		labels[document_index] = category
-		theta = thetas[category]
-		document = zeros(vocabulary, int)
-		for _ in xrange(vocabulary*100):
-			word = multinomial_sample(theta)
-			document[word] += 1
-		corpus[document_index] = document
-	return thetas, corpus, labels
+		corpus[document_index] = multinomial(vocabulary*100, thetas[category])
+	return log(thetas), corpus, labels
 
 
 class GibbsSampler(object):
