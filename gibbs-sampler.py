@@ -9,57 +9,6 @@ from numpy import count_nonzero, exp, inf, log, logaddexp
 from numpy.random import dirichlet, multinomial
 
 
-def multinomial_sample(distribution):
-	"""
-	Sample a random integer according to a multinomial distribution.
-
-	@param distribution: probabilitiy distribution
-	@type distribution: array of log probabilities
-	@return: integer in the range 0 to the length of distribution
-	@rtype: integer
-	"""
-	return multinomial(1, exp(distribution)).argmax()
-
-def generate_corpus(categories, vocabulary, documents,
-					hyp_pi = None, hyp_thetas = None):
-	"""
-	Create model parameters and sample data for a corpus of labeled documents.
-
-	@param categories: number of categories
-	@type categories: integer
-	@param vocabulary: vocabulary size
-	@type vocabulary: integer
-	@param documents: number of documents in the corpus
-	@type documents: integer
-	@param hyp_pi: optional category hyperparamter, default uninformative
-	@type hyp_pi: list or None
-	@param hyp_thetas: optional word count hyperparamter, default uninformative
-	@type hyp_thetas: list or None
-	@return: word distributions per category, documents, document labels
-	@rtype: tuple
-	"""
-	# Set up the hyperparameters.
-	if hyp_pi == None:
-		hyp_pi = [1]*categories
-	if len(hyp_pi) != categories:
-		raise Exception()
-	if hyp_thetas == None:
-		hyp_thetas = [1]*vocabulary
-	if len(hyp_thetas) != vocabulary:
-		raise Exception()
-	# Generate the true model parameters.
-	pi = log(dirichlet(hyp_pi, 1)[0])
-	thetas = dirichlet(hyp_thetas, categories)
-	# Generate the corpus and the true labels.
-	corpus = empty((documents, vocabulary), int)
-	labels = empty(documents, int)
-	for document_index in xrange(documents):
-		category = multinomial_sample(pi)
-		labels[document_index] = category
-		corpus[document_index] = multinomial(vocabulary*100, thetas[category])
-	return log(thetas), corpus, labels
-
-
 class GibbsSampler(object):
 	def __init__(self, hyp_pi, hyp_thetas, corpus):
 		"""
@@ -225,6 +174,61 @@ class GibbsSampler(object):
 		for element in a[nonzero(a != -inf)]:
 			logaddexp(m,element,m)
 		return m[0]
+
+
+def multinomial_sample(distribution):
+	"""
+	Sample a random integer according to a multinomial distribution.
+
+	@param distribution: probabilitiy distribution
+	@type distribution: array of log probabilities
+	@return: integer in the range 0 to the length of distribution
+	@rtype: integer
+	"""
+	return multinomial(1, exp(distribution)).argmax()
+
+
+def generate_corpus(categories, vocabulary, documents,
+					hyp_pi = None, hyp_thetas = None):
+	"""
+	Create model parameters and sample data for a corpus of labeled documents.
+
+	@param categories: number of categories
+	@type categories: integer
+	@param vocabulary: vocabulary size
+	@type vocabulary: integer
+	@param documents: number of documents in the corpus
+	@type documents: integer
+	@param hyp_pi: optional category hyperparamter, default uninformative
+	@type hyp_pi: list or None
+	@param hyp_thetas: optional word count hyperparamter, default uninformative
+	@type hyp_thetas: list or None
+	@return: word distributions per category, documents, document labels
+	@rtype: tuple
+	"""
+	# Set up the hyperparameters.
+	if hyp_pi == None:
+		hyp_pi = [1]*categories
+	if len(hyp_pi) != categories:
+		raise Exception()
+	if hyp_thetas == None:
+		hyp_thetas = [1]*vocabulary
+	if len(hyp_thetas) != vocabulary:
+		raise Exception()
+	# Generate the true model parameters.
+	pi = log(dirichlet(hyp_pi, 1)[0])
+	thetas = dirichlet(hyp_thetas, categories)
+	# Generate the corpus and the true labels.
+	corpus = empty((documents, vocabulary), int)
+	labels = empty(documents, int)
+	for document_index in xrange(documents):
+		category = multinomial_sample(pi)
+		labels[document_index] = category
+		corpus[document_index] = multinomial(vocabulary*100, thetas[category])
+	return log(thetas), corpus, labels
+
+
+
 
 if __name__ == "__main__":
 	# Generate data set
