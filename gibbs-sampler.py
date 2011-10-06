@@ -10,9 +10,13 @@ from numpy.random import dirichlet, multinomial
 
 
 class GibbsSampler(object):
+	"""Naive Bayes Gibbs sampler
+	
+	Given a set of hyperparamters and a corpus of document word counts, this objects
+	runs Gibbs sampling to assign labels to the documents using a Naive Bayes model.
+	"""
 	def __init__(self, hyp_pi, hyp_thetas, corpus):
-		"""
-		Initialize the Gibbs sampler
+		"""Initialize the Gibbs sampler
 
 		@param hyp_pi: category hyperparameter
 		@type hyp_pi: array of float
@@ -31,8 +35,7 @@ class GibbsSampler(object):
 
 
 	def estimate_labels(self, iterations = 10, burn_in = 0, lag = 0):
-		"""
-		Estimate the document labels.
+		"""Estimate the document labels.
 
 		Run the Gibbs sampler and use the expected value of the labels as the label
 		estimates.
@@ -52,8 +55,7 @@ class GibbsSampler(object):
 		return estimated_labels/iterations
 
 	def run(self, iterations = 10, burn_in = 0, lag = 0):
-		"""
-		Run the Gibbs sampler
+		"""Run the Gibbs sampler
 
 		@param iterations: number of iterations to run
 		@type iterations: integer
@@ -114,8 +116,7 @@ class GibbsSampler(object):
 		self.labels = array([multinomial_sample(pi) for _ in xrange(documents)])
 
 	def _iterate_gibbs_sampler(self):
-		"""
-		Perform a Gibbs sampling iteration.
+		"""Perform a Gibbs sampling iteration.
 
 		This updates the values of the C{labels} and C{thetas} parameters.
 		"""
@@ -160,8 +161,7 @@ class GibbsSampler(object):
 			self.thetas[category_index] = log(dirichlet(t[category_index], 1)[0])
 
 	def _sum_log_array(self, a):
-		"""
-		Sum the log probabilities in an array.
+		"""Sum the log probabilities in an array.
 
 		@param a: array logs
 		@type a: array of float
@@ -175,8 +175,7 @@ class GibbsSampler(object):
 
 
 def multinomial_sample(distribution):
-	"""
-	Sample a random integer according to a multinomial distribution.
+	"""Sample a random integer according to a multinomial distribution.
 
 	@param distribution: probabilitiy distribution
 	@type distribution: array of log probabilities
@@ -188,8 +187,7 @@ def multinomial_sample(distribution):
 
 def generate_corpus(categories, vocabulary, documents,
 					hyp_pi = None, hyp_thetas = None):
-	"""
-	Create model parameters and sample data for a corpus of labeled documents.
+	"""Create true parameters and sample data for a corpus of labeled documents.
 
 	@param categories: number of categories
 	@type categories: integer
