@@ -4,7 +4,7 @@ in U{Resnik and Hardisty 2010, "Gibbs Sampling for the Uninitiated
 <http://drum.lib.umd.edu/handle/1903/10058>}.
 """
 
-from numpy import array, empty, ones, nonzero, zeros
+from numpy import array, empty, ones, nonzero, repeat, zeros
 from numpy import count_nonzero, exp, inf, log, logaddexp
 from numpy.random import dirichlet, multinomial
 
@@ -136,19 +136,17 @@ class GibbsSampler(object):
 			category_index = self.labels[document_index]
 			word_counts[category_index] -= corpus[document_index]
 			category_counts[category_index] -= 1
-			posterior_pi = empty(categories)
+			posterior_pi = repeat(-inf, categories)
 			# Calculate label posterior for a single document.
 			for category_index in xrange(categories):
 				num = word_counts[category_index].sum() + \
 					self.hyp_pi[category_index] - 1.0
-				den = word_counts.sum() + self.hyp_pi.sum() - 1.0
-				label_factor = num/den
-				if label_factor != 0:
+				if num != 0:
+					den = word_counts.sum() + self.hyp_pi.sum() - 1.0
+					label_factor = num/den
 					word_factor = \
 						(self.thetas[category_index]*word_counts[category_index]).sum()
 					posterior_pi[category_index] = log(label_factor) + word_factor
-				else:
-					posterior_pi[category_index] = -inf
 			# Select a new label for the document.
 			posterior_pi -= self._sum_log_array(posterior_pi)
 			new_category = multinomial_sample(posterior_pi)
@@ -226,8 +224,6 @@ def generate_corpus(categories, vocabulary, documents,
 		labels[document_index] = category
 		corpus[document_index] = multinomial(vocabulary*100, thetas[category])
 	return log(thetas), corpus, labels
-
-
 
 
 if __name__ == "__main__":
