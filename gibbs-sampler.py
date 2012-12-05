@@ -49,7 +49,7 @@ class GibbsSampler(object):
 		@return: document label estimates
 		@rtype: array
 		"""
-		estimated_labels = zeros(self._categories(), int)
+		estimated_labels = zeros(self._documents(), int)
 		for iteration, thetas, labels in sampler.run(iterations, burn_in, lag):
 			estimated_labels += labels
 		return estimated_labels/iterations
