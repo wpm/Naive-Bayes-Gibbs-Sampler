@@ -110,10 +110,10 @@ class GibbsSampler(object):
 		categories = self._categories()
 		documents = self._documents()
 		self.thetas = empty(self.hyp_thetas.shape)
-		for category_index in xrange(categories):
+		for category_index in range(categories):
 			self.thetas[category_index] = \
 				log(dirichlet(self.hyp_thetas[category_index], 1)[0])
-		self.labels = array([multinomial_sample(pi) for _ in xrange(documents)])
+		self.labels = array([multinomial_sample(pi) for _ in range(documents)])
 
 	def _iterate_gibbs_sampler(self):
 		"""Perform a Gibbs sampling iteration.
@@ -126,20 +126,20 @@ class GibbsSampler(object):
 		# Get class counts and word counts for the classes.
 		category_counts = empty(categories, int)
 		word_counts = empty((categories, vocabulary), int)
-		for category_index in xrange(categories):
+		for category_index in range(categories):
 			category_counts[category_index] = \
 				count_nonzero(self.labels == category_index)
 			word_counts[category_index] = \
 				self.corpus[nonzero(self.labels == category_index)].transpose().sum(1)
 
 		# Estimate the new document labels.
-		for document_index in xrange(documents):
+		for document_index in range(documents):
 			category_index = self.labels[document_index]
 			word_counts[category_index] -= corpus[document_index]
 			category_counts[category_index] -= 1
 			posterior_pi = repeat(-inf, categories)
 			# Calculate label posterior for a single document.
-			for category_index in xrange(categories):
+			for category_index in range(categories):
 				num = word_counts[category_index].sum() + \
 					self.hyp_pi[category_index] - 1.0
 				if num != 0:
@@ -157,7 +157,7 @@ class GibbsSampler(object):
 
 		# Estimate the new word count distributions.
 		t = word_counts + self.hyp_thetas
-		for category_index in xrange(categories):
+		for category_index in range(categories):
 			self.thetas[category_index] = log(dirichlet(t[category_index], 1)[0])
 
 	def _sum_log_array(self, a):
@@ -217,7 +217,7 @@ def generate_corpus(categories, vocabulary, documents,
 	# Generate the corpus and the true labels.
 	corpus = empty((documents, vocabulary), int)
 	labels = empty(documents, int)
-	for document_index in xrange(documents):
+	for document_index in range(documents):
 		category = multinomial_sample(pi)
 		labels[document_index] = category
 		corpus[document_index] = multinomial(vocabulary*100, thetas[category])
@@ -232,9 +232,9 @@ if __name__ == "__main__":
 
 	true_theta, corpus, true_labels = \
 		generate_corpus(categories, vocabulary, documents)
-	print "true thetas\n%s" % true_theta
-	print "true labels %s" % true_labels
-	print "corpus\n%s" % corpus
+	print("true thetas\n%s" % true_theta)
+	print("true labels %s" % true_labels)
+	print("corpus\n%s" % corpus)
 
 	# Create the Gibbs sampler.
 	hyp_pi = ones(categories, int)						# uninformed label prior
@@ -243,4 +243,4 @@ if __name__ == "__main__":
 
 	# Use the sampler to estimate the document labels.
 	estimates = sampler.estimate_labels(20, 5, 2)
-	print "\nEstimated labels\n%s" % estimates
+	print("\nEstimated labels\n%s" % estimates)
