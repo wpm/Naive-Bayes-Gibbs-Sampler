@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Naive-bayes-gibbs-sampler by wpm</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Naive-bayes-gibbs-sampler</h1>
+        <p>Gibbs sampler for for a Naive Bayes document classifier</p>
+
+        <p class="view"><a href="https://github.com/wpm/Naive-Bayes-Gibbs-Sampler">View the Project on GitHub <small>wpm/Naive-Bayes-Gibbs-Sampler</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/wpm/Naive-Bayes-Gibbs-Sampler/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/wpm/Naive-Bayes-Gibbs-Sampler/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/wpm/Naive-Bayes-Gibbs-Sampler">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Naive Bayes Gibbs Sampler</h1>
+
+<p>This project implements the Gibbs sampler for Naive Bayes document classification described in <a href="http://drum.lib.umd.edu/handle/1903/10058">Resnik and Hardisty 2010, "Gibbs Sampling for the Uninitiated"</a>.
+It closely follows the notation and design put forth in that paper.</p>
+
+<p>There are only two significant differences between the algorithm presented in the paper and the code here.
+Unlike the paper, this code allows the documents to be grouped into more than two classes, so document priors
+are generated using a Dirichlet distribution rather than a Beta distribution.
+Also the equations in the paper are written in terms of probabilities, whereas to avoid underflow errors this code works with log probabilities. </p>
+
+<p>This code depends on <a href="http://numpy.scipy.org/">Numeric Python</a>.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/wpm">wpm</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
